@@ -20,6 +20,17 @@ export type LoginResponse = {
   user: LoggedInUser;
 };
 
+export type Kategori = {
+  id_kategori: number;
+  nama_kategori: string;
+};
+
+export type Rak = {
+  id_rak: number;
+  kode_rak: string;
+  lokasi: string;
+};
+
 export type Buku = {
   id_buku: number;
   judul: string;
@@ -84,6 +95,16 @@ export async function editBuku(id: number, payload: Partial<Buku>): Promise<void
 
 export async function hapusBuku(id: number): Promise<void> {
   await authFetch(`/buku/${id}`, { method: 'DELETE' });
+}
+
+export async function getKategori(): Promise<Kategori[]> {
+  const data = await authFetch('/kategori');
+  return data.data;
+}
+
+export async function getRak(): Promise<Rak[]> {
+  const data = await authFetch('/rak');
+  return data.data;
 }
 
 export async function login(
