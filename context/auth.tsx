@@ -5,12 +5,14 @@ import type { LoggedInUser } from '@/services/api';
 type AuthContextType = {
   user: LoggedInUser | null;
   isLoggedIn: boolean | null;
+  signIn: (token: string, user: LoggedInUser) => Promise<void>;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoggedIn: null,
+  signIn: async () => {},
   logout: async () => {},
 });
 
@@ -28,6 +30,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const signIn = async (token: string, userData: LoggedInUser) => {
+    await SecureStore.setItemAsync('token', token);
+    await SecureStore.setItemAsync('user', JSON.stringify(userData));
+    setUser(userData);
+    setIsLoggedIn(true);
+  };
+
   const logout = async () => {
     await SecureStore.deleteItemAsync('token');
     await SecureStore.deleteItemAsync('user');
@@ -36,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, signIn, logout }}>
       {children}
     </AuthContext.Provider>
   );

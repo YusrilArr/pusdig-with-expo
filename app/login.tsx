@@ -9,12 +9,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import { login } from '../services/api';
+import { login } from '@/services/api';
+import { useAuth } from '@/context/auth';
 
 export default function LoginScreen() {
-  const router = useRouter();
+  const { signIn } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,9 +28,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const result = await login(username, password);
-      await SecureStore.setItemAsync('token', result.token);
-      await SecureStore.setItemAsync('user', JSON.stringify(result.user));
-      router.replace('/(tabs)');
+      await signIn(result.token, result.user);
     } catch (error: any) {
       setErrorMsg(error?.message || 'Login gagal, coba lagi');
     } finally {
