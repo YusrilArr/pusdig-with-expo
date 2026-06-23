@@ -107,6 +107,23 @@ export async function getRak(): Promise<Rak[]> {
   return data.data;
 }
 
+export type ProfilSekolah = {
+  id: number;
+  nama_sekolah: string;
+  nama_aplikasi: string;
+  alamat: string | null;
+  no_telp: string | null;
+  email: string | null;
+  logo: string | null;
+  deskripsi: string | null;
+  updated_at: string;
+};
+
+export async function getProfilSekolah(): Promise<ProfilSekolah> {
+  const data = await authFetch('/profil-sekolah');
+  return data.data;
+}
+
 export async function login(
   username: string,
   password: string
