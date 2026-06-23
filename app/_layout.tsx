@@ -1,29 +1,20 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AuthProvider, useAuth } from '@/context/auth';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-export default function RootLayout() {
+function RootNavigator() {
   const colorScheme = useColorScheme();
-  // null = masih cek SecureStore, true/false = hasil pengecekan
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const { isLoggedIn } = useAuth();
 
-  useEffect(() => {
-    SecureStore.getItemAsync('token').then((token) => {
-      setIsLoggedIn(!!token);
-    });
-  }, []);
-
-  // Tampilkan loading singkat selagi cek apakah ada token tersimpan
   if (isLoggedIn === null) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -45,5 +36,13 @@ export default function RootLayout() {
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
   );
 }

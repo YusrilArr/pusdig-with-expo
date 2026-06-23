@@ -1,18 +1,21 @@
-// Base URL backend diambil dari environment variable EXPO_PUBLIC_API_URL
-// yang diset di file .env pada root project Expo.
-// Contoh isi .env: EXPO_PUBLIC_API_URL=http://192.168.1.5:3000/api
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+export type UserType = 'user' | 'anggota';
+
+export type LoggedInUser = {
+  id: number;
+  nama: string;
+  username: string;
+  role: 'admin' | 'petugas' | 'kepala_sekolah' | 'siswa' | 'guru';
+  userType: UserType;
+  kelas?: string | null;
+};
 
 export type LoginResponse = {
   success: boolean;
   message: string;
   token: string;
-  user: {
-    id_user: number;
-    nama: string;
-    username: string;
-    role: string;
-  };
+  user: LoggedInUser;
 };
 
 export async function login(

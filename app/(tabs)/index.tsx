@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,54 +7,75 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import type { LoggedInUser } from '@/services/api';
+import { useAuth } from '@/context/auth';
 
-type User = {
-  id_user: number;
-  nama: string;
-  username: string;
-  role: string;
-};
+type IconName = 'books.vertical.fill' | 'doc.badge.plus' | 'person.fill' | 'building.2.fill' | 'square.grid.2x2.fill';
 
 type MenuItem = {
-  icon: 'books.vertical.fill' | 'doc.badge.plus' | 'person.fill' | 'building.2.fill' | 'square.grid.2x2.fill';
+  icon: IconName;
   label: string;
   route: string;
   color: string;
-  adminOnly?: boolean;
+  roles: LoggedInUser['role'][];
 };
 
 const CARD_WIDTH = (Dimensions.get('window').width - 16 * 2 - 12) / 2;
 
 const MENU_ITEMS: MenuItem[] = [
-  { icon: 'books.vertical.fill', label: 'Daftar Buku', route: '/(tabs)/buku', color: '#0f4c5c' },
-  { icon: 'doc.badge.plus', label: 'Pinjam Buku', route: '/peminjaman', color: '#16a34a' },
-  { icon: 'building.2.fill', label: 'Profil Perpustakaan', route: '/profil-perpustakaan', color: '#b45309' },
-  { icon: 'square.grid.2x2.fill', label: 'Master Buku', route: '/master-buku', color: '#dc2626', adminOnly: true },
+  {
+    icon: 'books.vertical.fill',
+    label: 'Daftar Buku',
+    route: '/(tabs)/buku',
+    color: '#0f4c5c',
+    roles: ['admin', 'petugas', 'kepala_sekolah', 'siswa', 'guru'],
+  },
+  {
+    icon: 'square.grid.2x2.fill',
+    label: 'Master Buku',
+    route: '/master-buku',
+    color: '#dc2626',
+    roles: ['admin'],
+  },
+  {
+    icon: 'doc.badge.plus',
+    label: 'Pinjam Buku',
+    route: '/peminjaman',
+    color: '#16a34a',
+    roles: ['siswa', 'guru'],
+  },
+  {
+    icon: 'person.fill',
+    label: 'Profil Saya',
+    route: '/(tabs)/profil',
+    color: '#7c3aed',
+    roles: ['siswa', 'guru'],
+  },
+  {
+    icon: 'building.2.fill',
+    label: 'Profil Perpustakaan',
+    route: '/profil-perpustakaan',
+    color: '#b45309',
+    roles: ['admin', 'petugas', 'kepala_sekolah', 'siswa', 'guru'],
+  },
 ];
 
 export default function DashboardScreen() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    SecureStore.getItemAsync('user').then((json) => {
-      if (json) setUser(JSON.parse(json));
-    });
-  }, []);
-
-  const visibleMenus = MENU_ITEMS.filter(
-    (item) => !item.adminOnly || user?.role === 'admin'
-  );
+  const visibleMenus = user
+    ? MENU_ITEMS.filter((item) => item.roles.includes(user.role))
+    : [];
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.appName}>SiPusBuk</Text>
+          <Text style={styles.appName}>Pustaka Digital</Text>
           <Text style={styles.appSubtitle}>Perpustakaan SMPN 1 Gunung Kaler</Text>
         </View>
 
