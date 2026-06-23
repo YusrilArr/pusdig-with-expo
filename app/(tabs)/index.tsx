@@ -1,98 +1,207 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as SecureStore from 'expo-secure-store';
+import { useRouter } from 'expo-router';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+type User = {
+  id_user: number;
+  nama: string;
+  username: string;
+  role: string;
+};
 
-export default function HomeScreen() {
+type MenuItem = {
+  icon: 'books.vertical.fill' | 'doc.badge.plus' | 'person.fill' | 'building.2.fill' | 'square.grid.2x2.fill';
+  label: string;
+  route: string;
+  color: string;
+  adminOnly?: boolean;
+};
+
+const CARD_WIDTH = (Dimensions.get('window').width - 16 * 2 - 12) / 2;
+
+const MENU_ITEMS: MenuItem[] = [
+  { icon: 'books.vertical.fill', label: 'Daftar Buku', route: '/(tabs)/buku', color: '#0f4c5c' },
+  { icon: 'doc.badge.plus', label: 'Pinjam Buku', route: '/peminjaman', color: '#16a34a' },
+  { icon: 'building.2.fill', label: 'Profil Perpustakaan', route: '/profil-perpustakaan', color: '#b45309' },
+  { icon: 'square.grid.2x2.fill', label: 'Master Buku', route: '/master-buku', color: '#dc2626', adminOnly: true },
+];
+
+export default function DashboardScreen() {
+  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    SecureStore.getItemAsync('user').then((json) => {
+      if (json) setUser(JSON.parse(json));
+    });
+  }, []);
+
+  const visibleMenus = MENU_ITEMS.filter(
+    (item) => !item.adminOnly || user?.role === 'admin'
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.appName}>SiPusBuk</Text>
+          <Text style={styles.appSubtitle}>Perpustakaan SMPN 1 Gunung Kaler</Text>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Greeting Card */}
+        <View style={styles.greetingCard}>
+          <View>
+            <Text style={styles.greetingHello}>Halo,</Text>
+            <Text style={styles.greetingName}>{user?.nama ?? '...'}</Text>
+          </View>
+          <View style={[
+            styles.roleBadge,
+            user?.role === 'admin' ? styles.roleBadgeAdmin : styles.roleBadgeSiswa,
+          ]}>
+            <Text style={styles.roleText}>
+              {user?.role?.toUpperCase() ?? ''}
+            </Text>
+          </View>
+        </View>
+
+        {/* Menu Grid */}
+        <Text style={styles.sectionTitle}>Menu</Text>
+        <View style={styles.grid}>
+          {visibleMenus.map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              style={styles.menuCard}
+              onPress={() => router.push(item.route as any)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: item.color + '20' }]}>
+                <IconSymbol name={item.icon} size={30} color={item.color} />
+              </View>
+              <Text style={styles.menuLabel}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  safe: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+  },
+  container: {
+    paddingBottom: 32,
+  },
+  header: {
+    backgroundColor: '#0f4c5c',
+    paddingTop: 32,
+    paddingBottom: 28,
+    paddingHorizontal: 20,
+  },
+  appName: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 1,
+  },
+  appSubtitle: {
+    fontSize: 13,
+    color: '#a8d8e8',
+    marginTop: 2,
+  },
+  greetingCard: {
+    backgroundColor: '#ffffff',
+    marginHorizontal: 16,
+    marginTop: -16,
+    borderRadius: 14,
+    padding: 18,
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  greetingHello: {
+    fontSize: 13,
+    color: '#6b7280',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  greetingName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginTop: 2,
+  },
+  roleBadge: {
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  roleBadgeAdmin: {
+    backgroundColor: '#fef3c7',
+  },
+  roleBadgeSiswa: {
+    backgroundColor: '#dbeafe',
+  },
+  roleText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#374151',
+    letterSpacing: 0.5,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#374151',
+    marginTop: 24,
+    marginBottom: 12,
+    marginHorizontal: 16,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  menuCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 18,
+    alignItems: 'center',
+    width: CARD_WIDTH,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  menuLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
   },
 });
