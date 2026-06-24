@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -211,7 +211,7 @@ export default function RekapKunjunganScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f3f4f6' },
+  safe: { flex: 1, backgroundColor: '#0f4c5c' },
   header: {
     backgroundColor: '#0f4c5c',
     paddingHorizontal: 16,

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,11 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { getBuku, type Buku } from '@/services/api';
 
 export default function BukuScreen() {
+  const router = useRouter();
   const [buku, setBuku] = useState<Buku[]>([]);
   const [filtered, setFiltered] = useState<Buku[]>([]);
   const [search, setSearch] = useState('');
@@ -79,7 +81,11 @@ export default function BukuScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={styles.backText}>‹ Kembali</Text>
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Daftar Buku</Text>
+        <View style={{ minWidth: 70 }} />
       </View>
 
       <View style={styles.searchContainer}>
@@ -126,14 +132,18 @@ export default function BukuScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f3f4f6' },
+  safe: { flex: 1, backgroundColor: '#0f4c5c' },
   header: {
     backgroundColor: '#0f4c5c',
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#ffffff' },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: '#ffffff', flex: 1, textAlign: 'center' },
+  backBtn: { minWidth: 70 },
+  backText: { color: '#a8d8e8', fontSize: 16 },
   searchContainer: {
     padding: 12,
     backgroundColor: '#ffffff',

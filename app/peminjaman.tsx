@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -29,6 +31,17 @@ function formatTgl(tgl: string | null) {
   return new Date(tgl).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function hitungDurasi(item: Peminjaman): string | null {
+  if (item.tgl_kembali && item.tgl_pinjam) {
+    const diff = Math.round(
+      (new Date(item.tgl_kembali).getTime() - new Date(item.tgl_pinjam).getTime()) / 86400000
+    );
+    return `${diff} hari (aktual)`;
+  }
+  if (item.durasi_pinjam) return `${item.durasi_pinjam} hari`;
+  return null;
+}
+
 export default function PeminjamanScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<'ajukan' | 'riwayat'>('ajukan');
@@ -42,6 +55,8 @@ export default function PeminjamanScreen() {
   const [loadingRiwayat, setLoadingRiwayat] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState<number | null>(null);
+  const [modalBuku, setModalBuku] = useState<Buku | null>(null);
+  const [selectedDurasi, setSelectedDurasi] = useState<3 | 7 | 14>(7);
 
   const fetchBuku = useCallback(async () => {
     try {
@@ -79,29 +94,24 @@ export default function PeminjamanScreen() {
   };
 
   const handleAjukan = (item: Buku) => {
-    Alert.alert(
-      'Ajukan Peminjaman',
-      `Ajukan peminjaman untuk buku:\n"${item.judul}"?`,
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Ajukan',
-          onPress: async () => {
-            setSubmitting(item.id_buku);
-            try {
-              await ajukanPeminjaman(item.id_buku);
-              Alert.alert('Berhasil', 'Pengajuan peminjaman telah dikirim. Tunggu persetujuan petugas.');
-              await Promise.all([fetchBuku(), fetchRiwayat()]);
-              setTab('riwayat');
-            } catch (e: any) {
-              Alert.alert('Gagal', e.message || 'Gagal mengajukan peminjaman');
-            } finally {
-              setSubmitting(null);
-            }
-          },
-        },
-      ]
-    );
+    setSelectedDurasi(7);
+    setModalBuku(item);
+  };
+
+  const handleKonfirmasiAjukan = async () => {
+    if (!modalBuku) return;
+    setSubmitting(modalBuku.id_buku);
+    setModalBuku(null);
+    try {
+      await ajukanPeminjaman(modalBuku.id_buku, selectedDurasi);
+      Alert.alert('Berhasil', `Pengajuan peminjaman ${selectedDurasi} hari telah dikirim. Tunggu persetujuan petugas.`);
+      await Promise.all([fetchBuku(), fetchRiwayat()]);
+      setTab('riwayat');
+    } catch (e: any) {
+      Alert.alert('Gagal', e.message || 'Gagal mengajukan peminjaman');
+    } finally {
+      setSubmitting(null);
+    }
   };
 
   const renderBukuItem = ({ item }: { item: Buku }) => (
@@ -147,6 +157,9 @@ export default function PeminjamanScreen() {
         <Text style={styles.pengarang}>{item.pengarang}</Text>
         <View style={styles.tglRow}>
           <Text style={styles.tglText}>Diajukan: {formatTgl(item.tgl_pengajuan)}</Text>
+          {hitungDurasi(item) ? (
+            <Text style={styles.tglText}>Durasi: {hitungDurasi(item)}</Text>
+          ) : null}
           {item.tgl_jatuh_tempo ? (
             <Text style={styles.tglText}>Jatuh tempo: {formatTgl(item.tgl_jatuh_tempo)}</Text>
           ) : null}
@@ -235,12 +248,48 @@ export default function PeminjamanScreen() {
           />
         )
       )}
+      {/* Modal Pilih Durasi */}
+      <Modal
+        visible={modalBuku !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalBuku(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setModalBuku(null)}>
+          <Pressable style={styles.modalBox} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Pilih Durasi Pinjam</Text>
+            <Text style={styles.modalBukuJudul} numberOfLines={2}>{modalBuku?.judul}</Text>
+
+            <View style={styles.durasiRow}>
+              {([3, 7, 14] as const).map((d) => (
+                <TouchableOpacity
+                  key={d}
+                  style={[styles.durasiBtn, selectedDurasi === d && styles.durasiBtnActive]}
+                  onPress={() => setSelectedDurasi(d)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.durasiBtnText, selectedDurasi === d && styles.durasiBtnTextActive]}>
+                    {d} hari
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity style={styles.modalBtn} onPress={handleKonfirmasiAjukan} activeOpacity={0.8}>
+              <Text style={styles.modalBtnText}>Ajukan Peminjaman</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setModalBuku(null)} activeOpacity={0.8}>
+              <Text style={styles.modalBtnCancelText}>Batal</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f3f4f6' },
+  safe: { flex: 1, backgroundColor: '#0f4c5c' },
   header: {
     backgroundColor: '#0f4c5c',
     paddingHorizontal: 16,
@@ -329,4 +378,47 @@ const styles = StyleSheet.create({
   catatan: { fontSize: 12, color: '#dc2626', fontStyle: 'italic' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 },
   emptyText: { fontSize: 14, color: '#9ca3af', textAlign: 'center' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalBox: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    gap: 14,
+  },
+  modalTitle: { fontSize: 17, fontWeight: '700', color: '#111827', textAlign: 'center' },
+  modalBukuJudul: { fontSize: 13, color: '#6b7280', textAlign: 'center' },
+  durasiRow: { flexDirection: 'row', gap: 10, justifyContent: 'center', marginVertical: 4 },
+  durasiBtn: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  durasiBtnActive: { borderColor: '#0f4c5c', backgroundColor: '#e0f2fe' },
+  durasiBtnText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
+  durasiBtnTextActive: { color: '#0f4c5c' },
+  modalBtn: {
+    backgroundColor: '#0f4c5c',
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  modalBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
+  modalBtnCancel: {
+    borderWidth: 1.5,
+    borderColor: '#d1d5db',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalBtnCancelText: { color: '#6b7280', fontWeight: '600', fontSize: 14 },
 });

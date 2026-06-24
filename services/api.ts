@@ -135,6 +135,7 @@ export type Peminjaman = {
   tgl_jatuh_tempo: string | null;
   tgl_kembali: string | null;
   status: 'diajukan' | 'disetujui' | 'ditolak' | 'dipinjam' | 'dikembalikan' | 'terlambat' | 'hilang';
+  durasi_pinjam: number | null;
   catatan: string | null;
   judul: string;
   pengarang: string;
@@ -150,10 +151,10 @@ export async function getPeminjaman(status?: string): Promise<Peminjaman[]> {
   return data.data;
 }
 
-export async function ajukanPeminjaman(id_buku: number): Promise<void> {
+export async function ajukanPeminjaman(id_buku: number, durasi_pinjam: number): Promise<void> {
   await authFetch('/peminjaman', {
     method: 'POST',
-    body: JSON.stringify({ id_buku }),
+    body: JSON.stringify({ id_buku, durasi_pinjam }),
   });
 }
 

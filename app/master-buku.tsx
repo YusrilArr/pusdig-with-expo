@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -399,7 +399,7 @@ export default function MasterBukuScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f3f4f6' },
+  safe: { flex: 1, backgroundColor: '#0f4c5c' },
   header: {
     backgroundColor: '#0f4c5c',
     paddingHorizontal: 16,
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   retryText: { color: '#ffffff', fontWeight: '600' },
 
   // Form Modal
-  modalSafe: { flex: 1, backgroundColor: '#f3f4f6' },
+  modalsafe: { flex: 1, backgroundColor: '#0f4c5c' },
   modalHeader: {
     backgroundColor: '#ffffff',
     flexDirection: 'row',

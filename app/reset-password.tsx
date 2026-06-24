@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import {
   View,
   Text,
@@ -189,8 +189,8 @@ export default function ResetPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f3f4f6' },
-  scroll: { flexGrow: 1 },
+  safe: { flex: 1, backgroundColor: '#0f4c5c' },
+  scroll: { flexGrow: 1, backgroundColor: '#f3f4f6' },
   header: {
     backgroundColor: '#0f4c5c',
     paddingHorizontal: 16,

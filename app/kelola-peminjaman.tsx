@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,17 @@ const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }>
 function formatTgl(tgl: string | null) {
   if (!tgl) return '-';
   return new Date(tgl).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function hitungDurasi(item: Peminjaman): string | null {
+  if (item.tgl_kembali && item.tgl_pinjam) {
+    const diff = Math.round(
+      (new Date(item.tgl_kembali).getTime() - new Date(item.tgl_pinjam).getTime()) / 86400000
+    );
+    return `${diff} hari (aktual)`;
+  }
+  if (item.durasi_pinjam) return `${item.durasi_pinjam} hari`;
+  return null;
 }
 
 export default function KelolaPeminjamanScreen() {
@@ -69,7 +80,7 @@ export default function KelolaPeminjamanScreen() {
   const handleSetujui = (item: Peminjaman) => {
     Alert.alert(
       'Setujui Peminjaman',
-      `Setujui peminjaman "${item.judul}" oleh ${item.nama_anggota}?\n\nJatuh tempo: 7 hari dari sekarang.`,
+      `Setujui peminjaman "${item.judul}" oleh ${item.nama_anggota}?\n\nDurasi: ${item.durasi_pinjam ?? 7} hari dari sekarang.`,
       [
         { text: 'Batal', style: 'cancel' },
         {
@@ -151,6 +162,9 @@ export default function KelolaPeminjamanScreen() {
 
         <View style={styles.tglRow}>
           <Text style={styles.tglText}>Diajukan: {formatTgl(item.tgl_pengajuan)}</Text>
+          {hitungDurasi(item) ? (
+            <Text style={styles.tglText}>Durasi: {hitungDurasi(item)}</Text>
+          ) : null}
           {item.tgl_jatuh_tempo ? (
             <Text style={styles.tglText}>Jatuh tempo: {formatTgl(item.tgl_jatuh_tempo)}</Text>
           ) : null}
@@ -303,7 +317,7 @@ export default function KelolaPeminjamanScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f3f4f6' },
+  safe: { flex: 1, backgroundColor: '#0f4c5c' },
   header: {
     backgroundColor: '#0f4c5c',
     paddingHorizontal: 16,
