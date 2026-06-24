@@ -25,6 +25,13 @@ const MENU = [
     icon: 'tray.fill' as const,
     color: '#7c3aed',
   },
+  {
+    label: 'Master Anggota',
+    desc: 'Kelola data siswa dan guru sebagai anggota',
+    route: '/master-anggota',
+    icon: 'person.fill' as const,
+    color: '#16a34a',
+  },
 ];
 
 export default function DataMasterScreen() {

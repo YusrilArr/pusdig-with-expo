@@ -26,6 +26,31 @@ export type Kategori = {
   nama_kategori: string;
 };
 
+export type Anggota = {
+  id_anggota: number;
+  nis_nip: string;
+  nama: string;
+  jenis_anggota: 'siswa' | 'guru';
+  kelas: string | null;
+  username: string;
+  email: string | null;
+  no_telp: string | null;
+  qr_code: string;
+  status: 'aktif' | 'nonaktif';
+};
+
+export type AnggotaPayload = {
+  nis_nip: string;
+  nama: string;
+  jenis_anggota: 'siswa' | 'guru';
+  kelas?: string | null;
+  username: string;
+  email?: string | null;
+  password?: string;
+  no_telp?: string | null;
+  status?: 'aktif' | 'nonaktif';
+};
+
 export type Rak = {
   id_rak: number;
   kode_rak: string;
@@ -118,6 +143,23 @@ export async function editKategori(id: number, nama_kategori: string): Promise<v
 
 export async function hapusKategori(id: number): Promise<void> {
   await authFetch(`/kategori/${id}`, { method: 'DELETE' });
+}
+
+export async function getAnggota(): Promise<Anggota[]> {
+  const data = await authFetch('/anggota');
+  return data.data;
+}
+
+export async function tambahAnggota(payload: AnggotaPayload): Promise<void> {
+  await authFetch('/anggota', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export async function editAnggota(id: number, payload: AnggotaPayload): Promise<void> {
+  await authFetch(`/anggota/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+}
+
+export async function hapusAnggota(id: number): Promise<void> {
+  await authFetch(`/anggota/${id}`, { method: 'DELETE' });
 }
 
 export async function getRak(): Promise<Rak[]> {

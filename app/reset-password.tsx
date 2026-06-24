@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,20 +12,30 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const { email } = useLocalSearchParams<{ email: string }>();
+
   const [kode, setKode] = useState('');
   const [passwordBaru, setPasswordBaru] = useState('');
   const [konfirmasi, setKonfirmasi] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showKonfirmasi, setShowKonfirmasi] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [berhasil, setBerhasil] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const handleReset = async () => {
     if (!kode.trim()) {
@@ -40,7 +50,6 @@ export default function ResetPasswordScreen() {
       Alert.alert('Peringatan', 'Konfirmasi password tidak cocok');
       return;
     }
-
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/reset-password`, {
@@ -55,6 +64,26 @@ export default function ResetPasswordScreen() {
       Alert.alert('Gagal', e.message || 'Terjadi kesalahan. Coba lagi.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKirimUlang = async () => {
+    if (countdown > 0 || resending || !email) return;
+    setResending(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/lupa-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || 'Gagal mengirim ulang kode');
+      setCountdown(60);
+      Alert.alert('Terkirim', 'Kode reset telah dikirim ulang ke email Anda.');
+    } catch (e: any) {
+      Alert.alert('Gagal', e.message || 'Terjadi kesalahan. Coba lagi.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -113,15 +142,8 @@ export default function ResetPasswordScreen() {
                       onChangeText={setPasswordBaru}
                       editable={!loading}
                     />
-                    <TouchableOpacity
-                      onPress={() => setShowPassword(v => !v)}
-                      style={styles.eyeBtn}
-                    >
-                      <MaterialIcons
-                        name={showPassword ? 'visibility' : 'visibility-off'}
-                        size={20}
-                        color="#6b7280"
-                      />
+                    <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeBtn}>
+                      <MaterialIcons name={showPassword ? 'visibility' : 'visibility-off'} size={20} color="#6b7280" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -140,15 +162,8 @@ export default function ResetPasswordScreen() {
                       onChangeText={setKonfirmasi}
                       editable={!loading}
                     />
-                    <TouchableOpacity
-                      onPress={() => setShowKonfirmasi(v => !v)}
-                      style={styles.eyeBtn}
-                    >
-                      <MaterialIcons
-                        name={showKonfirmasi ? 'visibility' : 'visibility-off'}
-                        size={20}
-                        color="#6b7280"
-                      />
+                    <TouchableOpacity onPress={() => setShowKonfirmasi((v) => !v)} style={styles.eyeBtn}>
+                      <MaterialIcons name={showKonfirmasi ? 'visibility' : 'visibility-off'} size={20} color="#6b7280" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -165,6 +180,23 @@ export default function ResetPasswordScreen() {
                     <Text style={styles.btnText}>Reset Password</Text>
                   )}
                 </TouchableOpacity>
+
+                {email ? (
+                  <TouchableOpacity
+                    style={[styles.btnOutline, (countdown > 0 || resending) && styles.btnDisabled]}
+                    onPress={handleKirimUlang}
+                    disabled={countdown > 0 || resending}
+                    activeOpacity={0.8}
+                  >
+                    {resending ? (
+                      <ActivityIndicator size="small" color="#0f4c5c" />
+                    ) : (
+                      <Text style={styles.btnOutlineText}>
+                        {countdown > 0 ? `Kirim Ulang Kode (${countdown}s)` : 'Kirim Ulang Kode'}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ) : null}
               </>
             ) : (
               <>
@@ -238,12 +270,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 14,
   },
-  inputFlex: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: '#111827',
-  },
+  inputFlex: { flex: 1, paddingVertical: 12, fontSize: 14, color: '#111827' },
   eyeBtn: { padding: 4 },
   btn: {
     backgroundColor: '#0f4c5c',
@@ -252,6 +279,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
-  btnDisabled: { opacity: 0.6 },
+  btnDisabled: { opacity: 0.5 },
   btnText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
+  btnOutline: {
+    borderWidth: 1.5,
+    borderColor: '#0f4c5c',
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  btnOutlineText: { color: '#0f4c5c', fontWeight: '700', fontSize: 15 },
 });

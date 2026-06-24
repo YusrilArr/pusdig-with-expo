@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,13 @@ export default function LupaPasswordScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [terkirim, setTerkirim] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const handleKirim = async () => {
     const trimmed = email.trim();
@@ -28,7 +35,6 @@ export default function LupaPasswordScreen() {
       Alert.alert('Peringatan', 'Email tidak boleh kosong');
       return;
     }
-
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/lupa-password`, {
@@ -39,6 +45,27 @@ export default function LupaPasswordScreen() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || 'Gagal mengirim kode');
       setTerkirim(true);
+      setCountdown(60);
+    } catch (e: any) {
+      Alert.alert('Gagal', e.message || 'Terjadi kesalahan. Coba lagi.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKirimUlang = async () => {
+    if (countdown > 0 || loading) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/lupa-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || 'Gagal mengirim ulang kode');
+      setCountdown(60);
+      Alert.alert('Terkirim', 'Kode reset telah dikirim ulang ke email Anda.');
     } catch (e: any) {
       Alert.alert('Gagal', e.message || 'Terjadi kesalahan. Coba lagi.');
     } finally {
@@ -63,7 +90,7 @@ export default function LupaPasswordScreen() {
 
           <View style={styles.body}>
             <View style={styles.iconWrap}>
-              <Text style={styles.iconEmoji}>🔑</Text>
+              <Text style={styles.iconEmoji}>{terkirim ? '📧' : '🔑'}</Text>
             </View>
 
             {!terkirim ? (
@@ -105,24 +132,32 @@ export default function LupaPasswordScreen() {
               <>
                 <Text style={styles.title}>Email Terkirim!</Text>
                 <Text style={styles.desc}>
-                  Jika email <Text style={styles.emailHighlight}>{email}</Text> terdaftar, kode reset telah dikirim.{'\n\n'}
-                  Cek inbox Mailtrap Anda dan masukkan kode 8 karakter yang diterima.
+                  Kode reset telah dikirim ke{'\n'}
+                  <Text style={styles.emailHighlight}>{email}</Text>
+                  {'\n\n'}Cek inbox email Anda dan masukkan kode 8 karakter yang diterima.
                 </Text>
 
                 <TouchableOpacity
                   style={styles.btn}
-                  onPress={() => router.replace('/reset-password')}
+                  onPress={() => router.push(`/reset-password?email=${encodeURIComponent(email.trim())}`)}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.btnText}>Masukkan Kode Reset</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.btnOutline}
-                  onPress={() => { setTerkirim(false); setEmail(''); }}
+                  style={[styles.btnOutline, (countdown > 0 || loading) && styles.btnDisabled]}
+                  onPress={handleKirimUlang}
+                  disabled={countdown > 0 || loading}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.btnOutlineText}>Kirim Ulang</Text>
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#0f4c5c" />
+                  ) : (
+                    <Text style={styles.btnOutlineText}>
+                      {countdown > 0 ? `Kirim Ulang (${countdown}s)` : 'Kirim Ulang Kode'}
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </>
             )}
@@ -182,7 +217,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
-  btnDisabled: { opacity: 0.6 },
+  btnDisabled: { opacity: 0.5 },
   btnText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
   btnOutline: {
     borderWidth: 1.5,
