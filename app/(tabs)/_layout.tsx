@@ -5,9 +5,12 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuth } from '@/context/auth';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { user } = useAuth();
+  const isAnggota = user?.userType === 'anggota';
 
   return (
     <Tabs
@@ -29,6 +32,14 @@ export default function TabLayout() {
         options={{
           title: 'Buku',
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="books.vertical.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="riwayat"
+        options={{
+          title: 'Riwayat',
+          href: isAnggota ? undefined : null,
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="clock.arrow.circlepath" color={color} />,
         }}
       />
       <Tabs.Screen

@@ -26,6 +26,7 @@ const MAPPING = {
   'tray.fill': 'all-inbox',
   'qrcode': 'qr-code-scanner',
   'chart.bar.doc.horizontal': 'bar-chart',
+  'clock.arrow.circlepath': 'history',
 } as IconMapping;
 
 /**
