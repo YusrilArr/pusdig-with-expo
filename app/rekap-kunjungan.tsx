@@ -9,9 +9,12 @@ import {
   RefreshControl,
   Modal,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { getKunjungan, type Kunjungan, type KunjunganSummary } from '@/services/api';
 
 const BULAN_NAMA = [
@@ -41,6 +44,7 @@ export default function RekapKunjunganScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [tempBulan, setTempBulan] = useState(bulan);
   const [tempTahun, setTempTahun] = useState(tahun);
+  const [exporting, setExporting] = useState(false);
 
   const fetchData = useCallback(async (b: number, t: number) => {
     try {
@@ -64,6 +68,77 @@ export default function RekapKunjunganScreen() {
     setBulan(tempBulan);
     setTahun(tempTahun);
     setShowPicker(false);
+  };
+
+  const handleEkspor = async () => {
+    if (data.length === 0) {
+      Alert.alert('Tidak Ada Data', 'Tidak ada data kunjungan di periode ini untuk diekspor.');
+      return;
+    }
+    setExporting(true);
+    try {
+      const rows = data.map((item, i) => `
+        <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f9fafb'}">
+          <td style="padding:8px;text-align:center;border:1px solid #e5e7eb">${i + 1}</td>
+          <td style="padding:8px;border:1px solid #e5e7eb">${item.nama_anggota}</td>
+          <td style="padding:8px;text-align:center;border:1px solid #e5e7eb">${item.jenis_anggota}</td>
+          <td style="padding:8px;text-align:center;border:1px solid #e5e7eb">${item.kelas ?? '-'}</td>
+          <td style="padding:8px;text-align:center;border:1px solid #e5e7eb">${formatTgl(item.tanggal)}</td>
+          <td style="padding:8px;text-align:center;border:1px solid #e5e7eb">${formatJam(item.jam_masuk)}</td>
+          <td style="padding:8px;text-align:center;border:1px solid #e5e7eb">${formatJam(item.jam_keluar)}</td>
+        </tr>`).join('');
+
+      const html = `
+        <html><head><meta charset="utf-8">
+        <style>
+          body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+          h2 { color: #0f4c5c; margin-bottom: 4px; }
+          .subtitle { color: #6b7280; font-size: 13px; margin-bottom: 16px; }
+          .summary { display: flex; gap: 16px; margin-bottom: 20px; }
+          .sum-box { background: #e0f2fe; border-radius: 8px; padding: 12px 20px; text-align: center; }
+          .sum-val { font-size: 24px; font-weight: 800; color: #0f4c5c; }
+          .sum-lbl { font-size: 12px; color: #374151; }
+          table { width: 100%; border-collapse: collapse; font-size: 13px; }
+          th { background: #0f4c5c; color: #fff; padding: 10px 8px; border: 1px solid #0f4c5c; }
+          td { vertical-align: middle; }
+          .footer { margin-top: 24px; font-size: 11px; color: #9ca3af; text-align: right; }
+        </style></head>
+        <body>
+          <h2>Rekap Kunjungan Perpustakaan</h2>
+          <p class="subtitle">SMPN 1 Gunung Kaler &nbsp;|&nbsp; Periode: ${BULAN_NAMA[bulan - 1]} ${tahun}</p>
+          <div class="summary">
+            <div class="sum-box">
+              <div class="sum-val">${summary?.total ?? 0}</div>
+              <div class="sum-lbl">Total Kunjungan</div>
+            </div>
+            <div class="sum-box">
+              <div class="sum-val">${summary?.unique_anggota ?? 0}</div>
+              <div class="sum-lbl">Jumlah Pengunjung</div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>No</th><th>Nama</th><th>Jenis</th><th>Kelas</th>
+                <th>Tanggal</th><th>Jam Masuk</th><th>Jam Keluar</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <p class="footer">Dicetak pada ${new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' })}</p>
+        </body></html>`;
+
+      const { uri } = await Print.printToFileAsync({ html, base64: false });
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: `Rekap Kunjungan ${BULAN_NAMA[bulan - 1]} ${tahun}`,
+        UTI: 'com.adobe.pdf',
+      });
+    } catch (e: any) {
+      Alert.alert('Gagal', e.message || 'Gagal mengekspor PDF');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const tahunOptions = [];
@@ -109,7 +184,17 @@ export default function RekapKunjunganScreen() {
           <Text style={styles.backText}>‹ Kembali</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Rekap Kunjungan</Text>
-        <View style={{ minWidth: 70 }} />
+        <TouchableOpacity
+          style={styles.eksporBtn}
+          onPress={handleEkspor}
+          disabled={exporting}
+          activeOpacity={0.7}
+        >
+          {exporting
+            ? <ActivityIndicator size="small" color="#ffffff" />
+            : <Text style={styles.eksporBtnText}>Ekspor</Text>
+          }
+        </TouchableOpacity>
       </View>
 
       {/* Filter Bar */}
@@ -223,6 +308,15 @@ const styles = StyleSheet.create({
   backBtn: { minWidth: 70 },
   backText: { color: '#a8d8e8', fontSize: 16 },
   headerTitle: { fontSize: 16, fontWeight: '700', color: '#ffffff', flex: 1, textAlign: 'center' },
+  eksporBtn: {
+    backgroundColor: '#1a6b7c',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  eksporBtnText: { color: '#ffffff', fontSize: 12, fontWeight: '700' },
   filterBar: {
     backgroundColor: '#ffffff',
     paddingHorizontal: 16,

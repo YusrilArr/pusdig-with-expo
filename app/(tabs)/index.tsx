@@ -12,7 +12,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { LoggedInUser } from '@/services/api';
 import { useAuth } from '@/context/auth';
 
-type IconName = 'books.vertical.fill' | 'doc.badge.plus' | 'person.fill' | 'building.2.fill' | 'square.grid.2x2.fill' | 'tray.fill' | 'qrcode' | 'chart.bar.doc.horizontal';
+type IconName = 'books.vertical.fill' | 'doc.badge.plus' | 'person.fill' | 'building.2.fill' | 'square.grid.2x2.fill' | 'tray.fill' | 'qrcode' | 'chart.bar.doc.horizontal' | 'externaldrive.fill';
 
 type MenuItem = {
   icon: IconName;
@@ -33,9 +33,9 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['admin', 'petugas', 'kepala_sekolah', 'siswa', 'guru'],
   },
   {
-    icon: 'square.grid.2x2.fill',
-    label: 'Master Buku',
-    route: '/master-buku',
+    icon: 'externaldrive.fill',
+    label: 'Data Master',
+    route: '/data-master',
     color: '#dc2626',
     roles: ['admin'],
   },

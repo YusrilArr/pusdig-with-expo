@@ -27,6 +27,7 @@ const MAPPING = {
   'qrcode': 'qr-code-scanner',
   'chart.bar.doc.horizontal': 'bar-chart',
   'clock.arrow.circlepath': 'history',
+  'externaldrive.fill': 'storage',
 } as IconMapping;
 
 /**

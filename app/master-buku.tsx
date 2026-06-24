@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   retryText: { color: '#ffffff', fontWeight: '600' },
 
   // Form Modal
-  modalsafe: { flex: 1, backgroundColor: '#0f4c5c' },
+  modalSafe: { flex: 1, backgroundColor: '#f9fafb' },
   modalHeader: {
     backgroundColor: '#ffffff',
     flexDirection: 'row',
