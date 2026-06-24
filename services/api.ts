@@ -64,7 +64,12 @@ async function authFetch(path: string, options: RequestInit = {}): Promise<any> 
       ...options.headers,
     },
   });
-  const data = await response.json();
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`Server error (${response.status})`);
+  }
   if (!response.ok || !data.success) throw new Error(data.message || 'Request gagal');
   return data;
 }
@@ -101,6 +106,18 @@ export async function hapusBuku(id: number): Promise<void> {
 export async function getKategori(): Promise<Kategori[]> {
   const data = await authFetch('/kategori');
   return data.data;
+}
+
+export async function tambahKategori(nama_kategori: string): Promise<void> {
+  await authFetch('/kategori', { method: 'POST', body: JSON.stringify({ nama_kategori }) });
+}
+
+export async function editKategori(id: number, nama_kategori: string): Promise<void> {
+  await authFetch(`/kategori/${id}`, { method: 'PUT', body: JSON.stringify({ nama_kategori }) });
+}
+
+export async function hapusKategori(id: number): Promise<void> {
+  await authFetch(`/kategori/${id}`, { method: 'DELETE' });
 }
 
 export async function getRak(): Promise<Rak[]> {
