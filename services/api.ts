@@ -11,6 +11,7 @@ export type LoggedInUser = {
   role: 'admin' | 'petugas' | 'kepala_sekolah' | 'siswa' | 'guru';
   userType: UserType;
   kelas?: string | null;
+  qr_code?: string | null;
 };
 
 export type LoginResponse = {
@@ -122,6 +123,109 @@ export type ProfilSekolah = {
 export async function getProfilSekolah(): Promise<ProfilSekolah> {
   const data = await authFetch('/profil-sekolah');
   return data.data;
+}
+
+export type Peminjaman = {
+  id_peminjaman: number;
+  id_buku: number;
+  id_anggota: number;
+  id_user: number | null;
+  tgl_pengajuan: string;
+  tgl_pinjam: string | null;
+  tgl_jatuh_tempo: string | null;
+  tgl_kembali: string | null;
+  status: 'diajukan' | 'disetujui' | 'ditolak' | 'dipinjam' | 'dikembalikan' | 'terlambat' | 'hilang';
+  catatan: string | null;
+  judul: string;
+  pengarang: string;
+  gambar_sampul?: string | null;
+  nama_anggota?: string;
+  kelas?: string | null;
+  nama_petugas?: string | null;
+};
+
+export async function getPeminjaman(status?: string): Promise<Peminjaman[]> {
+  const query = status ? `?status=${status}` : '';
+  const data = await authFetch(`/peminjaman${query}`);
+  return data.data;
+}
+
+export async function ajukanPeminjaman(id_buku: number): Promise<void> {
+  await authFetch('/peminjaman', {
+    method: 'POST',
+    body: JSON.stringify({ id_buku }),
+  });
+}
+
+export type AnggotaQR = {
+  id_anggota: number;
+  nis_nip: string | null;
+  nama: string;
+  jenis_anggota: string;
+  kelas: string | null;
+  status: string;
+  qr_code: string;
+};
+
+export async function getBukuByQr(kode: string): Promise<Buku> {
+  const data = await authFetch(`/buku/qr/${encodeURIComponent(kode)}`);
+  return data.data;
+}
+
+export async function getAnggotaByQr(kode: string): Promise<AnggotaQR> {
+  const data = await authFetch(`/anggota/qr/${encodeURIComponent(kode)}`);
+  return data.data;
+}
+
+export async function prosesPeminjaman(
+  id: number,
+  action: 'setujui' | 'tolak' | 'kembalikan',
+  catatan?: string
+): Promise<void> {
+  await authFetch(`/peminjaman/${id}/proses`, {
+    method: 'PUT',
+    body: JSON.stringify({ action, catatan }),
+  });
+}
+
+export type Kunjungan = {
+  id_kunjungan: number;
+  tanggal: string;
+  jam_masuk: string;
+  jam_keluar: string | null;
+  keterangan: string | null;
+  nama_anggota: string;
+  jenis_anggota: string;
+  kelas: string | null;
+  nis_nip: string | null;
+};
+
+export type KunjunganSummary = {
+  total: number;
+  unique_anggota: number;
+  bulan: number;
+  tahun: number;
+};
+
+export async function getKunjungan(bulan?: number, tahun?: number): Promise<{ data: Kunjungan[]; summary: KunjunganSummary }> {
+  const params = new URLSearchParams();
+  if (bulan) params.append('bulan', String(bulan));
+  if (tahun) params.append('tahun', String(tahun));
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const res = await authFetch(`/kunjungan${query}`);
+  return { data: res.data, summary: res.summary };
+}
+
+export async function catatKunjungan(id_anggota: number, keterangan?: string): Promise<{ id_kunjungan: number; tipe: 'masuk' | 'keluar' }> {
+  const res = await authFetch('/kunjungan', {
+    method: 'POST',
+    body: JSON.stringify({ id_anggota, keterangan }),
+  });
+  return { id_kunjungan: res.id_kunjungan, tipe: res.tipe };
+}
+
+export async function catatKeluar(id_kunjungan: number): Promise<void> {
+  await authFetch(`/kunjungan/${id_kunjungan}/keluar`, { method: 'PUT' });
 }
 
 export async function login(

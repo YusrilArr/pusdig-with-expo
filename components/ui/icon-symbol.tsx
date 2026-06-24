@@ -23,6 +23,9 @@ const MAPPING = {
   'building.2.fill': 'business',
   'doc.badge.plus': 'add-circle-outline',
   'square.grid.2x2.fill': 'dashboard',
+  'tray.fill': 'all-inbox',
+  'qrcode': 'qr-code-scanner',
+  'chart.bar.doc.horizontal': 'bar-chart',
 } as IconMapping;
 
 /**

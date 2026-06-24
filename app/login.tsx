@@ -9,13 +9,17 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { login } from '@/services/api';
 import { useAuth } from '@/context/auth';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
+  const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -56,13 +60,26 @@ export default function LoginScreen() {
           />
 
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Masukkan password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.inputWrap}>
+            <TextInput
+              style={styles.inputFlex}
+              placeholder="Masukkan password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword(v => !v)}
+              style={styles.eyeBtn}
+            >
+              <MaterialIcons
+                name={showPassword ? 'visibility' : 'visibility-off'}
+                size={20}
+                color="#6b7280"
+              />
+            </TouchableOpacity>
+          </View>
 
           {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
 
@@ -76,6 +93,13 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.buttonText}>Masuk</Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.lupaBtn}
+            onPress={() => router.push('/lupa-password' as any)}
+          >
+            <Text style={styles.lupaText}>Lupa Password?</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -126,6 +150,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 15,
   },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+  },
+  inputFlex: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 15,
+  },
+  eyeBtn: { padding: 4 },
   errorText: {
     color: '#dc2626',
     fontSize: 13,
@@ -141,6 +179,16 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#ffffff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  lupaBtn: {
+    alignItems: 'center',
+    marginTop: 16,
+    paddingVertical: 4,
+  },
+  lupaText: {
+    color: '#0f4c5c',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '@/context/auth';
 
 export default function ProfilScreen() {
@@ -16,13 +17,16 @@ export default function ProfilScreen() {
     );
   };
 
+  const isAnggota = user?.userType === 'anggota';
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profil</Text>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Avatar */}
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
             {user?.nama?.charAt(0).toUpperCase() ?? '?'}
@@ -34,7 +38,7 @@ export default function ProfilScreen() {
 
         <View style={[
           styles.roleBadge,
-          user?.userType === 'anggota' ? styles.badgeSiswa : styles.badgeUser,
+          isAnggota ? styles.badgeSiswa : styles.badgeUser,
         ]}>
           <Text style={styles.roleText}>{user?.role?.toUpperCase() ?? ''}</Text>
         </View>
@@ -42,13 +46,29 @@ export default function ProfilScreen() {
         {user?.kelas ? (
           <Text style={styles.kelas}>Kelas {user.kelas}</Text>
         ) : null}
-      </View>
 
-      <View style={styles.footer}>
+        {/* QR Code — hanya untuk siswa/guru */}
+        {isAnggota && user?.qr_code ? (
+          <View style={styles.qrCard}>
+            <Text style={styles.qrTitle}>Kartu Anggota QR</Text>
+            <Text style={styles.qrSubtitle}>Tunjukkan ke petugas saat meminjam buku</Text>
+            <View style={styles.qrBox}>
+              <QRCode
+                value={user.qr_code}
+                size={180}
+                color="#0f4c5c"
+                backgroundColor="#ffffff"
+              />
+            </View>
+            <Text style={styles.qrCode}>{user.qr_code}</Text>
+          </View>
+        ) : null}
+
+        {/* Tombol Keluar */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
           <Text style={styles.logoutText}>Keluar</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -70,9 +90,10 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   content: {
-    flex: 1,
     alignItems: 'center',
-    paddingTop: 40,
+    paddingTop: 32,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
     gap: 8,
   },
   avatar: {
@@ -121,14 +142,52 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginTop: 2,
   },
-  footer: {
-    padding: 24,
+  qrCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 16,
+    gap: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  qrTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  qrSubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  qrBox: {
+    marginTop: 8,
+    padding: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  qrCode: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0f4c5c',
+    letterSpacing: 1,
+    marginTop: 4,
   },
   logoutBtn: {
     backgroundColor: '#dc2626',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
+    width: '100%',
+    marginTop: 24,
   },
   logoutText: {
     color: '#ffffff',

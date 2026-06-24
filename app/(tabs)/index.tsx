@@ -12,7 +12,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { LoggedInUser } from '@/services/api';
 import { useAuth } from '@/context/auth';
 
-type IconName = 'books.vertical.fill' | 'doc.badge.plus' | 'person.fill' | 'building.2.fill' | 'square.grid.2x2.fill';
+type IconName = 'books.vertical.fill' | 'doc.badge.plus' | 'person.fill' | 'building.2.fill' | 'square.grid.2x2.fill' | 'tray.fill' | 'qrcode' | 'chart.bar.doc.horizontal';
 
 type MenuItem = {
   icon: IconName;
@@ -52,6 +52,27 @@ const MENU_ITEMS: MenuItem[] = [
     route: '/(tabs)/profil',
     color: '#7c3aed',
     roles: ['siswa', 'guru'],
+  },
+  {
+    icon: 'tray.fill',
+    label: 'Kelola Peminjaman',
+    route: '/kelola-peminjaman',
+    color: '#7c3aed',
+    roles: ['admin', 'petugas'],
+  },
+  {
+    icon: 'qrcode',
+    label: 'Scan QR',
+    route: '/scan-qr',
+    color: '#0369a1',
+    roles: ['admin', 'petugas'],
+  },
+  {
+    icon: 'chart.bar.doc.horizontal',
+    label: 'Rekap Kunjungan',
+    route: '/rekap-kunjungan',
+    color: '#0369a1',
+    roles: ['admin', 'petugas', 'kepala_sekolah'],
   },
   {
     icon: 'building.2.fill',
