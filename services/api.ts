@@ -108,6 +108,18 @@ export async function getRak(): Promise<Rak[]> {
   return data.data;
 }
 
+export async function tambahRak(payload: { kode_rak: string; lokasi: string }): Promise<void> {
+  await authFetch('/rak', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export async function editRak(id: number, payload: { kode_rak: string; lokasi: string }): Promise<void> {
+  await authFetch(`/rak/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+}
+
+export async function hapusRak(id: number): Promise<void> {
+  await authFetch(`/rak/${id}`, { method: 'DELETE' });
+}
+
 export type ProfilSekolah = {
   id: number;
   nama_sekolah: string;
