@@ -1,6 +1,22 @@
 import * as SecureStore from 'expo-secure-store';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_URL_KEY = 'custom_api_url';
+let _apiUrl: string = process.env.EXPO_PUBLIC_API_URL ?? '';
+
+export async function loadApiUrl(): Promise<void> {
+  const saved = await SecureStore.getItemAsync(API_URL_KEY);
+  if (saved) _apiUrl = saved;
+}
+
+export async function saveApiUrl(url: string): Promise<void> {
+  const trimmed = url.trim().replace(/\/$/, '');
+  await SecureStore.setItemAsync(API_URL_KEY, trimmed);
+  _apiUrl = trimmed;
+}
+
+export function getApiUrl(): string {
+  return _apiUrl;
+}
 
 export type UserType = 'user' | 'anggota';
 
@@ -81,7 +97,7 @@ async function getToken(): Promise<string> {
 
 async function authFetch(path: string, options: RequestInit = {}): Promise<any> {
   const token = await getToken();
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${_apiUrl}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -304,13 +320,11 @@ export async function login(
   username: string,
   password: string
 ): Promise<LoginResponse> {
-  if (!API_URL) {
-    throw new Error(
-      'EXPO_PUBLIC_API_URL belum diset. Cek file .env di root project Expo.'
-    );
+  if (!_apiUrl) {
+    throw new Error('URL API belum diset. Buka pengaturan (⚙) di halaman login.');
   }
 
-  const response = await fetch(`${API_URL}/auth/login`, {
+  const response = await fetch(`${_apiUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),

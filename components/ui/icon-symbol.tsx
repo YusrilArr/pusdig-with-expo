@@ -28,6 +28,7 @@ const MAPPING = {
   'chart.bar.doc.horizontal': 'bar-chart',
   'clock.arrow.circlepath': 'history',
   'externaldrive.fill': 'storage',
+  'map.fill': 'map',
 } as IconMapping;
 
 /**

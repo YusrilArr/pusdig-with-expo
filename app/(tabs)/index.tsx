@@ -12,7 +12,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { LoggedInUser } from '@/services/api';
 import { useAuth } from '@/context/auth';
 
-type IconName = 'books.vertical.fill' | 'doc.badge.plus' | 'person.fill' | 'building.2.fill' | 'square.grid.2x2.fill' | 'tray.fill' | 'qrcode' | 'chart.bar.doc.horizontal' | 'externaldrive.fill';
+type IconName = 'books.vertical.fill' | 'doc.badge.plus' | 'person.fill' | 'building.2.fill' | 'square.grid.2x2.fill' | 'tray.fill' | 'qrcode' | 'chart.bar.doc.horizontal' | 'externaldrive.fill' | 'map.fill';
 
 type MenuItem = {
   icon: IconName;
@@ -73,6 +73,13 @@ const MENU_ITEMS: MenuItem[] = [
     route: '/rekap-kunjungan',
     color: '#0369a1',
     roles: ['admin', 'petugas', 'kepala_sekolah'],
+  },
+  {
+    icon: 'map.fill',
+    label: 'Tata Letak Buku',
+    route: '/tata-letak-buku',
+    color: '#d97706',
+    roles: ['admin', 'petugas', 'kepala_sekolah', 'siswa', 'guru'],
   },
   {
     icon: 'building.2.fill',

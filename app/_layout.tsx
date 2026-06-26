@@ -32,6 +32,8 @@ function RootNavigator() {
         </Stack.Protected>
         <Stack.Protected guard={!isLoggedIn}>
           <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="lupa-password" options={{ headerShown: false }} />
+          <Stack.Screen name="reset-password" options={{ headerShown: false }} />
         </Stack.Protected>
       </Stack>
       <StatusBar style="light" />

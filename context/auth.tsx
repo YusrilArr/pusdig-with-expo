@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import type { LoggedInUser } from '@/services/api';
+import { loadApiUrl } from '@/services/api';
 
 type AuthContextType = {
   user: LoggedInUser | null;
@@ -22,9 +23,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     Promise.all([
+      loadApiUrl(),
       SecureStore.getItemAsync('token'),
       SecureStore.getItemAsync('user'),
-    ]).then(([token, userJson]) => {
+    ]).then(([, token, userJson]) => {
       setIsLoggedIn(!!token);
       if (userJson) setUser(JSON.parse(userJson));
     });
